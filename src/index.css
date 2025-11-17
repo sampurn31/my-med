@@ -5,28 +5,69 @@
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900;
+    /* Safe area insets for notched phones */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Better touch targets for mobile */
+  button, a {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Safe area utility */
+  .pb-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
   }
 }
 
 @layer components {
+  /* Mobile-first buttons - larger touch targets */
   .btn-primary {
-    @apply bg-primary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-primary-600 text-white px-5 py-3 rounded-xl font-semibold hover:bg-primary-700 active:bg-primary-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply text-base md:text-sm;
+    @apply min-h-[48px] md:min-h-[40px];
+    /* Better shadow for mobile */
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
   }
   
   .btn-secondary {
-    @apply bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-semibold hover:bg-gray-300 active:bg-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply text-base md:text-sm;
+    @apply min-h-[48px] md:min-h-[40px];
   }
   
   .btn-danger {
-    @apply bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-red-600 text-white px-5 py-3 rounded-xl font-semibold hover:bg-red-700 active:bg-red-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply text-base md:text-sm;
+    @apply min-h-[48px] md:min-h-[40px];
   }
   
+  /* Mobile-optimized input fields */
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all;
+    @apply w-full px-4 py-3 md:py-2 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all;
+    @apply text-base md:text-sm;
+    @apply min-h-[48px] md:min-h-[40px];
   }
   
+  /* Mobile-first cards */
   .card {
-    @apply bg-white rounded-xl shadow-sm p-6 border border-gray-100;
+    @apply bg-white rounded-2xl shadow-md p-5 md:p-6 border border-gray-100;
+    /* Better spacing on mobile */
+    @apply mb-4 md:mb-0;
+  }
+  
+  /* Mobile-friendly text sizes */
+  h1 {
+    @apply text-2xl md:text-3xl font-bold;
+  }
+  
+  h2 {
+    @apply text-xl md:text-2xl font-bold;
+  }
+  
+  h3 {
+    @apply text-lg md:text-xl font-semibold;
   }
 }
 

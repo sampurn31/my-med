@@ -142,140 +142,150 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen bg-gray-50 pb-24 md:pb-8">
+      {/* Header - Mobile Optimized */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Pill className="w-8 h-8 text-primary-600" />
-              <h1 className="text-2xl font-bold text-gray-900">My Meds</h1>
+            <div className="flex items-center gap-2 md:gap-3">
+              <Pill className="w-7 h-7 md:w-8 md:h-8 text-primary-600" />
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">My Meds</h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               <button
                 onClick={handleCleanupDuplicates}
-                className="btn-secondary flex items-center gap-2 text-sm"
+                className="btn-secondary flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:px-4 md:py-2"
                 title="Remove duplicate dose logs"
               >
                 <Trash2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Cleanup</span>
+                <span className="hidden md:inline">Cleanup</span>
               </button>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Welcome back,</p>
-                <p className="font-medium text-gray-900">{currentUser?.displayName || currentUser?.email}</p>
+              <div className="text-right hidden sm:block">
+                <p className="text-xs md:text-sm text-gray-500">Welcome back,</p>
+                <p className="text-xs md:text-sm font-medium text-gray-900 truncate max-w-[120px] md:max-w-none">
+                  {currentUser?.displayName || currentUser?.email?.split('@')[0]}
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="card">
-            <div className="flex items-center justify-between">
+      {/* Main Content - Mobile First */}
+      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+        {/* Quick Stats - Mobile Optimized */}
+        <div className="grid grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-8">
+          <div className="card p-4 md:p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm text-gray-500">Today's Doses</p>
-                <p className="text-3xl font-bold text-gray-900">{doseLogs.length}</p>
+                <p className="text-xs md:text-sm text-gray-500 mb-1">Today's</p>
+                <p className="text-2xl md:text-3xl font-bold text-gray-900">{doseLogs.length}</p>
               </div>
-              <Calendar className="w-12 h-12 text-primary-600 opacity-20" />
+              <Calendar className="w-8 h-8 md:w-12 md:h-12 text-primary-600 opacity-20 hidden md:block" />
             </div>
           </div>
-          <div className="card">
-            <div className="flex items-center justify-between">
+          <div className="card p-4 md:p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm text-gray-500">Completed</p>
-                <p className="text-3xl font-bold text-green-600">{completedDoses.length}</p>
+                <p className="text-xs md:text-sm text-gray-500 mb-1">Done</p>
+                <p className="text-2xl md:text-3xl font-bold text-green-600">{completedDoses.length}</p>
               </div>
-              <Check className="w-12 h-12 text-green-600 opacity-20" />
+              <Check className="w-8 h-8 md:w-12 md:h-12 text-green-600 opacity-20 hidden md:block" />
             </div>
           </div>
-          <div className="card">
-            <div className="flex items-center justify-between">
+          <div className="card p-4 md:p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm text-gray-500">Upcoming</p>
-                <p className="text-3xl font-bold text-blue-600">{upcomingDoses.length}</p>
+                <p className="text-xs md:text-sm text-gray-500 mb-1">Upcoming</p>
+                <p className="text-2xl md:text-3xl font-bold text-blue-600">{upcomingDoses.length}</p>
               </div>
-              <Bell className="w-12 h-12 text-blue-600 opacity-20" />
+              <Bell className="w-8 h-8 md:w-12 md:h-12 text-blue-600 opacity-20 hidden md:block" />
             </div>
           </div>
         </div>
 
-        {/* Upcoming Doses */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Upcoming Doses</h2>
+        {/* Upcoming Doses - Mobile Optimized */}
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4 px-1">Upcoming Doses</h2>
           {upcomingDoses.length === 0 ? (
-            <div className="card text-center py-8">
-              <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">No upcoming doses for today</p>
-              <Link to="/medications" className="text-primary-600 hover:text-primary-700 font-medium mt-2 inline-block">
+            <div className="card text-center py-8 md:py-12">
+              <Bell className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm md:text-base">No upcoming doses for today</p>
+              <Link to="/medications" className="text-primary-600 hover:text-primary-700 font-medium mt-2 inline-block text-sm md:text-base">
                 Add your first medication
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {upcomingDoses.map((log) => {
                 const med = medications[log.medId];
                 const schedule = schedules[log.scheduleId];
                 
                 return (
-                  <div key={log.id} className="card">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                  <div key={log.id} className="card p-4 md:p-6">
+                    {/* Mobile: Stack vertically, Desktop: Side by side */}
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
                           {med?.photoUrl && (
                             <img
                               src={med.photoUrl}
                               alt={med.name}
-                              className="w-12 h-12 rounded-lg object-cover"
+                              className="w-12 h-12 md:w-14 md:h-14 rounded-xl object-cover flex-shrink-0"
                             />
                           )}
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{med?.name || 'Unknown'}</h3>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold text-gray-900 text-base md:text-lg truncate">
+                              {med?.name || 'Unknown'}
+                            </h3>
                             <p className="text-sm text-gray-500">
                               {med?.strength} • {med?.form}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Clock className="w-4 h-4" />
-                          <span>{format(log.scheduledAt.toDate(), 'h:mm a')}</span>
+                        <div className="flex items-center gap-2 text-sm md:text-base text-gray-600 mb-2">
+                          <Clock className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+                          <span className="font-medium">{format(log.scheduledAt.toDate(), 'h:mm a')}</span>
                           {log.snoozedUntil && (
-                            <span className="text-orange-600">
+                            <span className="text-orange-600 text-xs md:text-sm">
                               (Snoozed until {format(log.snoozedUntil.toDate(), 'h:mm a')})
                             </span>
                           )}
                         </div>
                         {schedule?.instructions && (
-                          <p className="text-sm text-gray-600 mt-2">{schedule.instructions}</p>
+                          <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded-lg">
+                            {schedule.instructions}
+                          </p>
                         )}
                       </div>
-                      <div className="flex gap-2 ml-4">
+                      {/* Buttons - Stack on mobile, horizontal on desktop */}
+                      <div className="flex flex-col md:flex-row gap-2 md:ml-4 w-full md:w-auto">
                         <button
                           onClick={() => handleTakeDose(log.id)}
                           disabled={actionLoading === log.id}
-                          className="btn-primary flex items-center gap-2"
+                          className="btn-primary flex items-center justify-center gap-2 w-full md:w-auto"
                         >
-                          <Check className="w-4 h-4" />
-                          Take
+                          <Check className="w-5 h-5 md:w-4 md:h-4" />
+                          <span>Take</span>
                         </button>
-                        <button
-                          onClick={() => handleSnoozeDose(log.id)}
-                          disabled={actionLoading === log.id}
-                          className="btn-secondary flex items-center gap-2"
-                        >
-                          <Clock className="w-4 h-4" />
-                          Snooze
-                        </button>
-                        <button
-                          onClick={() => handleSkipDose(log.id)}
-                          disabled={actionLoading === log.id}
-                          className="btn-secondary flex items-center gap-2"
-                        >
-                          <SkipForward className="w-4 h-4" />
-                          Skip
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleSnoozeDose(log.id)}
+                            disabled={actionLoading === log.id}
+                            className="btn-secondary flex items-center justify-center gap-2 flex-1 md:flex-none"
+                          >
+                            <Clock className="w-4 h-4" />
+                            <span className="hidden sm:inline">Snooze</span>
+                          </button>
+                          <button
+                            onClick={() => handleSkipDose(log.id)}
+                            disabled={actionLoading === log.id}
+                            className="btn-secondary flex items-center justify-center gap-2 flex-1 md:flex-none"
+                          >
+                            <SkipForward className="w-4 h-4" />
+                            <span className="hidden sm:inline">Skip</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -285,33 +295,35 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Completed Doses */}
+        {/* Completed Doses - Mobile Optimized */}
         {completedDoses.length > 0 && (
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Completed Today</h2>
-            <div className="space-y-3">
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4 px-1">Completed Today</h2>
+            <div className="space-y-2 md:space-y-3">
               {completedDoses.map((log) => {
                 const med = medications[log.medId];
                 
                 return (
-                  <div key={log.id} className="card bg-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                  <div key={log.id} className="card bg-gray-50 p-4 md:p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         {med?.photoUrl && (
                           <img
                             src={med.photoUrl}
                             alt={med.name}
-                            className="w-10 h-10 rounded-lg object-cover opacity-75"
+                            className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover opacity-75 flex-shrink-0"
                           />
                         )}
-                        <div>
-                          <h3 className="font-medium text-gray-700">{med?.name || 'Unknown'}</h3>
-                          <p className="text-sm text-gray-500">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-medium text-gray-700 text-sm md:text-base truncate">
+                            {med?.name || 'Unknown'}
+                          </h3>
+                          <p className="text-xs md:text-sm text-gray-500">
                             {format(log.scheduledAt.toDate(), 'h:mm a')}
                           </p>
                         </div>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(log.status)}`}>
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase flex-shrink-0 ${getStatusBadge(log.status)}`}>
                         {log.status}
                       </span>
                     </div>
@@ -322,32 +334,38 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/medications" className="card hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center gap-3">
-              <Pill className="w-8 h-8 text-primary-600" />
-              <div>
-                <h3 className="font-semibold text-gray-900">Medications</h3>
-                <p className="text-sm text-gray-500">Manage your medicines</p>
+        {/* Quick Actions - Mobile Optimized */}
+        <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+          <Link to="/medications" className="card hover:shadow-lg active:scale-[0.98] transition-all cursor-pointer p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Pill className="w-6 h-6 md:w-7 md:h-7 text-primary-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-gray-900 text-base md:text-lg">Medications</h3>
+                <p className="text-xs md:text-sm text-gray-500 mt-1">Manage your medicines</p>
               </div>
             </div>
           </Link>
-          <Link to="/schedules" className="card hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-8 h-8 text-primary-600" />
-              <div>
-                <h3 className="font-semibold text-gray-900">Schedules</h3>
-                <p className="text-sm text-gray-500">View all schedules</p>
+          <Link to="/schedules" className="card hover:shadow-lg active:scale-[0.98] transition-all cursor-pointer p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-6 h-6 md:w-7 md:h-7 text-blue-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-gray-900 text-base md:text-lg">Schedules</h3>
+                <p className="text-xs md:text-sm text-gray-500 mt-1">View all schedules</p>
               </div>
             </div>
           </Link>
-          <Link to="/family" className="card hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center gap-3">
-              <Users className="w-8 h-8 text-primary-600" />
-              <div>
-                <h3 className="font-semibold text-gray-900">Family</h3>
-                <p className="text-sm text-gray-500">Manage caregivers</p>
+          <Link to="/family" className="card hover:shadow-lg active:scale-[0.98] transition-all cursor-pointer p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Users className="w-6 h-6 md:w-7 md:h-7 text-purple-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-gray-900 text-base md:text-lg">Family</h3>
+                <p className="text-xs md:text-sm text-gray-500 mt-1">Manage caregivers</p>
               </div>
             </div>
           </Link>

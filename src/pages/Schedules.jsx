@@ -186,29 +186,30 @@ export default function Schedules() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-8 h-8 text-primary-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Schedules</h1>
+    <div className="min-h-screen bg-gray-50 pb-24 md:pb-8">
+      {/* Header - Mobile Optimized */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3 md:py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
+              <Calendar className="w-7 h-7 md:w-8 md:h-8 text-primary-600" />
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Schedules</h1>
             </div>
             <button
               onClick={() => handleOpenModal()}
-              className="btn-primary flex items-center gap-2"
+              className="btn-primary flex items-center gap-2 text-sm md:text-base"
               disabled={medications.length === 0}
             >
               <Plus className="w-5 h-5" />
-              Add Schedule
+              <span className="hidden sm:inline">Add Schedule</span>
+              <span className="sm:hidden">Add</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Content - Mobile First */}
+      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
         {medications.length === 0 ? (
           <div className="card text-center py-12">
             <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -229,55 +230,50 @@ export default function Schedules() {
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {schedules.map((schedule) => (
-              <div key={schedule.id} className="card">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <div key={schedule.id} className="card p-5 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-3">
                       {getMedicationName(schedule.medId)}
                     </h3>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <p>
-                        <span className="font-medium">Start:</span>{' '}
-                        {format(schedule.startDate.toDate(), 'MMM dd, yyyy')}
-                      </p>
+                    <div className="space-y-2 text-sm md:text-base text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <span><span className="font-medium">Start:</span> {format(schedule.startDate.toDate(), 'MMM dd, yyyy')}</span>
+                      </div>
                       {schedule.endDate && (
-                        <p>
-                          <span className="font-medium">End:</span>{' '}
-                          {format(schedule.endDate.toDate(), 'MMM dd, yyyy')}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span><span className="font-medium">End:</span> {format(schedule.endDate.toDate(), 'MMM dd, yyyy')}</span>
+                        </div>
                       )}
-                      <p>
-                        <span className="font-medium">Recurrence:</span>{' '}
-                        {schedule.recurrence.type === 'daily' ? 'Daily' : `Every ${schedule.recurrence.intervalHours} hours`}
-                      </p>
-                      <p>
-                        <span className="font-medium">Times:</span>{' '}
-                        {schedule.times.join(', ')}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <span><span className="font-medium">Times:</span> {schedule.times.join(', ')}</span>
+                      </div>
                       {schedule.instructions && (
-                        <p>
-                          <span className="font-medium">Instructions:</span>{' '}
-                          {schedule.instructions}
-                        </p>
+                        <div className="bg-gray-50 p-3 rounded-lg mt-2">
+                          <span className="font-medium">Instructions:</span> {schedule.instructions}
+                        </div>
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex gap-2 md:ml-4 w-full md:w-auto">
                     <button
                       onClick={() => handleOpenModal(schedule)}
-                      className="btn-secondary flex items-center gap-2"
+                      className="flex-1 md:flex-none btn-secondary flex items-center justify-center gap-2"
                     >
                       <Edit className="w-4 h-4" />
-                      Edit
+                      <span>Edit</span>
                     </button>
                     <button
                       onClick={() => handleDelete(schedule.id)}
-                      className="btn-danger flex items-center gap-2"
+                      className="flex-1 md:flex-none btn-danger flex items-center justify-center gap-2"
                     >
                       <Trash2 className="w-4 h-4" />
-                      Delete
+                      <span>Delete</span>
                     </button>
                   </div>
                 </div>
@@ -287,18 +283,22 @@ export default function Schedules() {
         )}
       </div>
 
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Modal - Mobile Optimized */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50">
+          <div className="bg-white rounded-t-3xl md:rounded-2xl max-w-md w-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-5 md:p-6">
+              {/* Mobile drag handle */}
+              <div className="md:hidden flex justify-center mb-4">
+                <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
+              </div>
+              <div className="flex items-center justify-between mb-5 md:mb-6">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900">
                   {editingSchedule ? 'Edit Schedule' : 'Add Schedule'}
                 </h2>
                 <button
                   onClick={handleCloseModal}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-2 -mr-2"
                 >
                   <X className="w-6 h-6" />
                 </button>

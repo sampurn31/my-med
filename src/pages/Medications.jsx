@@ -160,28 +160,29 @@ export default function Medications() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Pill className="w-8 h-8 text-primary-600" />
-              <h1 className="text-2xl font-bold text-gray-900">My Medications</h1>
+    <div className="min-h-screen bg-gray-50 pb-24 md:pb-8">
+      {/* Header - Mobile Optimized */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3 md:py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
+              <Pill className="w-7 h-7 md:w-8 md:h-8 text-primary-600" />
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Medications</h1>
             </div>
             <button
               onClick={() => handleOpenModal()}
-              className="btn-primary flex items-center gap-2"
+              className="btn-primary flex items-center gap-2 text-sm md:text-base"
             >
               <Plus className="w-5 h-5" />
-              Add Medication
+              <span className="hidden sm:inline">Add Medication</span>
+              <span className="sm:hidden">Add</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Content - Mobile First */}
+      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
         {medications.length === 0 ? (
           <div className="card text-center py-12">
             <Pill className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -196,9 +197,9 @@ export default function Medications() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {medications.map((med) => (
-              <div key={med.id} className="card">
+              <div key={med.id} className="card p-5 md:p-6">
                 {/* Photo display disabled - Firebase Storage not enabled */}
                 {/* {med.photoUrl && (
                   <img
@@ -207,16 +208,16 @@ export default function Medications() {
                     className="w-full h-48 object-cover rounded-lg mb-4"
                   />
                 )} */}
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">{med.name}</h3>
-                <p className="text-sm text-gray-600 mb-3">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">{med.name}</h3>
+                <p className="text-sm md:text-base text-gray-600 mb-3">
                   {med.strength} • {med.form}
                 </p>
                 {med.notes && (
-                  <p className="text-sm text-gray-500 mb-3">{med.notes}</p>
+                  <p className="text-sm text-gray-500 mb-3 bg-gray-50 p-2 rounded-lg">{med.notes}</p>
                 )}
                 {med.pillsRemaining !== null && (
                   <div className="mb-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${
                       med.pillsRemaining <= 10 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
                     }`}>
                       {med.pillsRemaining} pills remaining
@@ -229,14 +230,14 @@ export default function Medications() {
                     className="flex-1 btn-secondary flex items-center justify-center gap-2"
                   >
                     <Edit className="w-4 h-4" />
-                    Edit
+                    <span>Edit</span>
                   </button>
                   <button
                     onClick={() => handleDelete(med.id)}
                     className="flex-1 btn-danger flex items-center justify-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Delete
+                    <span>Delete</span>
                   </button>
                 </div>
               </div>
@@ -245,18 +246,22 @@ export default function Medications() {
         )}
       </div>
 
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Modal - Mobile Optimized */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50">
+          <div className="bg-white rounded-t-3xl md:rounded-2xl max-w-md w-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-5 md:p-6">
+              {/* Mobile drag handle */}
+              <div className="md:hidden flex justify-center mb-4">
+                <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
+              </div>
+              <div className="flex items-center justify-between mb-5 md:mb-6">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900">
                   {editingMed ? 'Edit Medication' : 'Add Medication'}
                 </h2>
                 <button
                   onClick={handleCloseModal}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-2 -mr-2"
                 >
                   <X className="w-6 h-6" />
                 </button>
