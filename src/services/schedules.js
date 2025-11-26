@@ -119,8 +119,27 @@ export const addSchedule = async (userId, scheduleData) => {
     // Create dose logs for today if schedule is active today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    if (startDate <= today && (!endDate || endDate >= today)) {
+    
+    // Normalize startDate to midnight for comparison
+    const startDateNormalized = new Date(startDate);
+    startDateNormalized.setHours(0, 0, 0, 0);
+    
+    // Normalize endDate to midnight for comparison (if exists)
+    const endDateNormalized = endDate ? new Date(endDate) : null;
+    if (endDateNormalized) {
+      endDateNormalized.setHours(0, 0, 0, 0);
+    }
+    
+    // Check if today is within the schedule range
+    const isActiveToday = startDateNormalized <= today && (!endDateNormalized || endDateNormalized >= today);
+    
+    console.log(`Schedule date check: start=${startDateNormalized.toDateString()}, today=${today.toDateString()}, end=${endDateNormalized?.toDateString() || 'none'}, isActive=${isActiveToday}`);
+    
+    if (isActiveToday) {
+      console.log(`Creating dose logs for today...`);
       await createTodayDoseLogs(userId, scheduleRef.id, scheduleData.medId, scheduleData.times);
+    } else {
+      console.log(`Schedule not active today, skipping dose log creation`);
     }
 
     return scheduleRef.id;

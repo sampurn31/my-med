@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getTodayDoseLogs, markDoseAsTaken, snoozeDose, skipDose } from '../services/doseLogs';
 import { getUserMedications } from '../services/medications';
-import { getUserSchedules } from '../services/schedules';
+import { getUserSchedules, syncTodayDoseLogs } from '../services/schedules';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { Clock, Check, SkipForward, Bell, Pill, Calendar, Users, Trash2 } from 'lucide-react';
@@ -27,11 +27,14 @@ export default function Dashboard() {
     try {
       setLoading(true);
 
-      // Note: syncTodayDoseLogs is called in App.jsx on login, so we don't need to call it here
-      // This prevents duplicate dose log creation
+      // Sync dose logs for today's schedules
+      // This ensures any newly created schedules have their dose logs
+      console.log('🔄 Syncing dose logs for dashboard...');
+      await syncTodayDoseLogs(currentUser.uid);
 
       // Load today's dose logs
       const logs = await getTodayDoseLogs(currentUser.uid);
+      console.log(`📊 Loaded ${logs.length} dose logs for today`);
 
       // Load medications
       const meds = await getUserMedications(currentUser.uid);
