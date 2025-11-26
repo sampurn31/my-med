@@ -225,3 +225,54 @@ export const getCaregiverPatients = async (caregiverId) => {
   }
 };
 
+/**
+ * Fix broken family relationships (make them bidirectional)
+ * Call this if family members are not showing up correctly
+ */
+export const fixFamilyRelationships = async (userId) => {
+  try {
+    console.log('🔧 Fixing family relationships...');
+    
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      throw new Error('User not found');
+    }
+    
+    const familyIds = userSnap.data().family || [];
+    
+    if (familyIds.length === 0) {
+      console.log('No family members to fix');
+      return { fixed: 0 };
+    }
+    
+    let fixed = 0;
+    
+    // For each family member, ensure they have you in their family too
+    for (const familyMemberId of familyIds) {
+      const memberRef = doc(db, 'users', familyMemberId);
+      const memberSnap = await getDoc(memberRef);
+      
+      if (memberSnap.exists()) {
+        const memberFamily = memberSnap.data().family || [];
+        
+        // If they don't have you in their family, add you
+        if (!memberFamily.includes(userId)) {
+          await updateDoc(memberRef, {
+            family: arrayUnion(userId),
+          });
+          console.log(`✅ Fixed relationship with ${memberSnap.data().email}`);
+          fixed++;
+        }
+      }
+    }
+    
+    console.log(`🎉 Fixed ${fixed} family relationships`);
+    return { fixed };
+  } catch (error) {
+    console.error('Error fixing family relationships:', error);
+    throw error;
+  }
+};
+

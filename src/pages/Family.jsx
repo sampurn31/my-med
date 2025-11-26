@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getFamilyMembers, inviteFamilyMember, removeFamilyMember } from '../services/family';
+import { getFamilyMembers, inviteFamilyMember, removeFamilyMember, fixFamilyRelationships } from '../services/family';
 import toast from 'react-hot-toast';
-import { Users, Plus, X, Mail, UserPlus } from 'lucide-react';
+import { Users, Plus, X, Mail, UserPlus, RefreshCw } from 'lucide-react';
 
 export default function Family() {
   const { currentUser } = useAuth();
@@ -69,6 +69,21 @@ export default function Family() {
     }
   };
 
+  const handleFixRelationships = async () => {
+    try {
+      const result = await fixFamilyRelationships(currentUser.uid);
+      if (result.fixed > 0) {
+        toast.success(`Fixed ${result.fixed} family relationship(s)!`);
+      } else {
+        toast.success('All family relationships are already correct!');
+      }
+      await loadFamilyMembers();
+    } catch (error) {
+      console.error('Error fixing relationships:', error);
+      toast.error('Failed to fix relationships');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -95,13 +110,24 @@ export default function Family() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setShowInviteModal(true)}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              Add Member
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleFixRelationships}
+                className="btn-secondary flex items-center gap-2"
+                title="Fix broken family relationships"
+              >
+                <RefreshCw className="w-5 h-5" />
+                <span className="hidden md:inline">Fix Sync</span>
+              </button>
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="btn-primary flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="hidden sm:inline">Add Member</span>
+                <span className="sm:hidden">Add</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

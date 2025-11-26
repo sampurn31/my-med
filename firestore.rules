@@ -28,8 +28,12 @@ service cloud.firestore {
       allow create: if isOwner(userId) && 
                       request.resource.data.keys().hasAll(['name', 'email', 'createdAt', 'timezone', 'family', 'fcmTokens']);
       
-      // Users can update their own document
-      allow update: if isOwner(userId);
+      // Users can update their own document (full access)
+      // OR update ONLY the family field of other users (for bidirectional family invites)
+      allow update: if isOwner(userId) || 
+                      (isAuthenticated() && 
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['family']) &&
+                       request.resource.data.family.hasAll(resource.data.family));
       
       // Users can delete their own document
       allow delete: if isOwner(userId);
