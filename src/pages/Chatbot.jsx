@@ -256,54 +256,54 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-3">
-            <MessageCircle className="w-8 h-8 text-primary-600" />
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-24 md:pb-0">
+      {/* Header - Mobile Optimized */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-6">
+          <div className="flex items-center gap-2 md:gap-3">
+            <MessageCircle className="w-7 h-7 md:w-8 md:h-8 text-primary-600" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Medication Assistant</h1>
-              <p className="text-sm text-gray-500">Ask me anything about your medications</p>
+              <h1 className="text-lg md:text-2xl font-bold text-gray-900">Med Assistant</h1>
+              <p className="text-xs md:text-sm text-gray-500">Ask about your medications</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Disclaimer */}
+      {/* Disclaimer - Collapsible on mobile */}
       <div className="bg-yellow-50 border-b border-yellow-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3">
           <div className="flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-yellow-800">
-              <strong>Disclaimer:</strong> This chatbot provides general information only and is not a substitute for professional medical advice, diagnosis, or treatment. Always consult your healthcare provider for medical concerns.
+            <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <p className="text-xs md:text-sm text-yellow-800">
+              <strong>Disclaimer:</strong> This provides general information only. Always consult your healthcare provider.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="space-y-4">
+      {/* Messages - with bottom padding for input + nav */}
+      <div className="flex-1 overflow-y-auto pb-32 md:pb-4">
+        <div className="max-w-4xl mx-auto px-3 md:px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+          <div className="space-y-3 md:space-y-4">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex gap-2 md:gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {message.type === 'bot' && (
-                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-5 h-5 text-primary-600" />
+                  <div className="w-7 h-7 md:w-8 md:h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 md:w-5 md:h-5 text-primary-600" />
                   </div>
                 )}
                 <div
-                  className={`max-w-[70%] rounded-2xl px-4 py-3 ${
+                  className={`max-w-[75%] md:max-w-[70%] rounded-2xl px-3 py-2 md:px-4 md:py-3 ${
                     message.type === 'user'
                       ? 'bg-primary-600 text-white'
                       : 'bg-white border border-gray-200 text-gray-900'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-line">{message.text}</p>
+                  <p className="text-sm md:text-base whitespace-pre-line">{message.text}</p>
                   <p
                     className={`text-xs mt-1 ${
                       message.type === 'user' ? 'text-primary-100' : 'text-gray-400'
@@ -316,18 +316,18 @@ export default function Chatbot() {
                   </p>
                 </div>
                 {message.type === 'user' && (
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-5 h-5 text-gray-600" />
+                  <div className="w-7 h-7 md:w-8 md:h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
                   </div>
                 )}
               </div>
             ))}
             {loading && (
-              <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-5 h-5 text-primary-600" />
+              <div className="flex gap-2 md:gap-3 justify-start">
+                <div className="w-7 h-7 md:w-8 md:h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-4 h-4 md:w-5 md:h-5 text-primary-600" />
                 </div>
-                <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3">
+                <div className="bg-white border border-gray-200 rounded-2xl px-3 py-2 md:px-4 md:py-3">
                   <div className="flex gap-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -341,26 +341,26 @@ export default function Chatbot() {
         </div>
       </div>
 
-      {/* Input */}
-      <div className="bg-white border-t border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex gap-3">
+      {/* Input - Fixed at bottom, above navigation */}
+      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-30">
+        <div className="max-w-4xl mx-auto px-3 md:px-4 sm:px-6 lg:px-8 py-3 md:py-4">
+          <div className="flex gap-2 md:gap-3">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
-              className="input-field flex-1"
+              className="input-field flex-1 text-sm md:text-base"
               disabled={loading}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || loading}
-              className="btn-primary flex items-center gap-2"
+              className="btn-primary flex items-center gap-2 px-4 md:px-5"
             >
-              <Send className="w-5 h-5" />
-              Send
+              <Send className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="hidden md:inline">Send</span>
             </button>
           </div>
         </div>
