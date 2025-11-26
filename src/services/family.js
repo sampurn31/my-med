@@ -24,6 +24,8 @@ export const inviteFamilyMember = async (userId, inviteeEmail) => {
       throw new Error('Valid email address is required');
     }
 
+    console.log(`🔍 Searching for user with email: ${inviteeEmail}`);
+
     // Find user by email
     const usersQuery = query(
       collection(db, 'users'),
@@ -33,11 +35,14 @@ export const inviteFamilyMember = async (userId, inviteeEmail) => {
     const snapshot = await getDocs(usersQuery);
     
     if (snapshot.empty) {
+      console.log('❌ No user found with this email');
       throw new Error('No user found with this email. They need to create an account first.');
     }
     
     const inviteeId = snapshot.docs[0].id;
     const inviteeData = snapshot.docs[0].data();
+    
+    console.log(`✅ Found user: ${inviteeData.name || inviteeEmail} (${inviteeId})`);
     
     if (inviteeId === userId) {
       throw new Error('Cannot add yourself as a family member');
@@ -48,7 +53,8 @@ export const inviteFamilyMember = async (userId, inviteeEmail) => {
     const userSnap = await getDoc(userRef);
     
     if (!userSnap.exists()) {
-      throw new Error('User document not found');
+      console.error('❌ Current user document not found');
+      throw new Error('Your user profile was not found. Please try logging out and back in.');
     }
 
     const currentFamily = userSnap.data().family || [];
@@ -56,10 +62,14 @@ export const inviteFamilyMember = async (userId, inviteeEmail) => {
       throw new Error('This person is already in your family');
     }
     
+    console.log(`📝 Adding ${inviteeEmail} to family...`);
+    
     // Add invitee to user's family
     await updateDoc(userRef, {
       family: arrayUnion(inviteeId),
     });
+    
+    console.log(`✅ Updated your family list`);
     
     // Add user to invitee's family (bidirectional)
     const inviteeRef = doc(db, 'users', inviteeId);
@@ -67,7 +77,8 @@ export const inviteFamilyMember = async (userId, inviteeEmail) => {
       family: arrayUnion(userId),
     });
     
-    console.log(`✅ Added ${inviteeEmail} as family member`);
+    console.log(`✅ Updated ${inviteeEmail}'s family list`);
+    console.log(`🎉 Successfully added ${inviteeEmail} as family member`);
     
     return {
       success: true,
@@ -75,7 +86,13 @@ export const inviteFamilyMember = async (userId, inviteeEmail) => {
       inviteeName: inviteeData.name || inviteeEmail,
     };
   } catch (error) {
-    console.error('Error inviting family member:', error);
+    console.error('❌ Error inviting family member:', error);
+    
+    // Provide more helpful error messages
+    if (error.code === 'permission-denied') {
+      throw new Error('Permission denied. Please make sure Firestore rules are deployed correctly.');
+    }
+    
     throw error;
   }
 };

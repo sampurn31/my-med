@@ -20,8 +20,9 @@ service cloud.firestore {
     
     // Users collection
     match /users/{userId} {
-      // Users can read their own document
-      allow read: if isOwner(userId);
+      // Users can read their own document OR any user document (for family invites)
+      // This allows searching for users by email to invite them
+      allow read: if isAuthenticated();
       
       // Users can create their own document on signup
       allow create: if isOwner(userId) && 
