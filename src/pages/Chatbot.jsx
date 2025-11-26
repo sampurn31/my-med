@@ -61,6 +61,12 @@ export default function Chatbot() {
   // Enhanced rule-based responses with personalized data
   const getRuleBasedResponse = (userMessage) => {
     const message = userMessage.toLowerCase();
+    console.log('🤖 Processing message:', message);
+    console.log('📊 User data:', {
+      medications: userData.medications.length,
+      schedules: userData.schedules.length,
+      doseLogs: userData.doseLogs.length,
+    });
 
     // Greeting
     if (message.match(/^(hi|hello|hey|good morning|good evening)/)) {
@@ -180,6 +186,34 @@ export default function Chatbot() {
     // Thank you
     if (message.match(/^(thanks|thank you|thx|ty)/)) {
       return 'You\'re welcome! Stay healthy and don\'t forget to take your medications on time! 💊😊';
+    }
+
+    // Specific medication query - check if user is asking about a specific medication
+    const specificMed = userData.medications.find(med => 
+      message.includes(med.name.toLowerCase())
+    );
+    
+    if (specificMed) {
+      let response = `📋 ${specificMed.name} Details:\n\n`;
+      response += `• Strength: ${specificMed.strength}\n`;
+      response += `• Form: ${specificMed.form}\n`;
+      if (specificMed.pillsRemaining !== null) {
+        response += `• Pills Remaining: ${specificMed.pillsRemaining}\n`;
+      }
+      if (specificMed.notes) {
+        response += `• Notes: ${specificMed.notes}\n`;
+      }
+      
+      // Find schedules for this medication
+      const medSchedules = userData.schedules.filter(s => s.medId === specificMed.id);
+      if (medSchedules.length > 0) {
+        response += `\n⏰ Schedules:\n`;
+        medSchedules.forEach(sched => {
+          response += `• ${sched.times.join(', ')}\n`;
+        });
+      }
+      
+      return response;
     }
 
     // Default response with suggestions
