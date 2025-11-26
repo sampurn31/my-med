@@ -16,26 +16,47 @@ import { db } from '../config/firebase';
  */
 export const inviteFamilyMember = async (userId, inviteeEmail) => {
   try {
+    // Validate inputs
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    if (!inviteeEmail || !inviteeEmail.includes('@')) {
+      throw new Error('Valid email address is required');
+    }
+
     // Find user by email
     const usersQuery = query(
       collection(db, 'users'),
-      where('email', '==', inviteeEmail)
+      where('email', '==', inviteeEmail.toLowerCase().trim())
     );
     
     const snapshot = await getDocs(usersQuery);
     
     if (snapshot.empty) {
-      throw new Error('User not found with this email');
+      throw new Error('No user found with this email. They need to create an account first.');
     }
     
     const inviteeId = snapshot.docs[0].id;
+    const inviteeData = snapshot.docs[0].data();
     
     if (inviteeId === userId) {
       throw new Error('Cannot add yourself as a family member');
     }
+
+    // Check if already family members
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      throw new Error('User document not found');
+    }
+
+    const currentFamily = userSnap.data().family || [];
+    if (currentFamily.includes(inviteeId)) {
+      throw new Error('This person is already in your family');
+    }
     
     // Add invitee to user's family
-    const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
       family: arrayUnion(inviteeId),
     });
@@ -46,10 +67,12 @@ export const inviteFamilyMember = async (userId, inviteeEmail) => {
       family: arrayUnion(userId),
     });
     
+    console.log(`✅ Added ${inviteeEmail} as family member`);
+    
     return {
       success: true,
       inviteeId,
-      inviteeName: snapshot.docs[0].data().name,
+      inviteeName: inviteeData.name || inviteeEmail,
     };
   } catch (error) {
     console.error('Error inviting family member:', error);
