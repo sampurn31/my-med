@@ -16,60 +16,29 @@ import { db } from '../config/firebase';
  */
 export const inviteFamilyMember = async (userId, inviteeEmail) => {
   try {
-    // Validate inputs
-    if (!userId) {
-      throw new Error('User ID is required');
-    }
-    if (!inviteeEmail || !inviteeEmail.includes('@')) {
-      throw new Error('Valid email address is required');
-    }
-
-    console.log(`🔍 Searching for user with email: ${inviteeEmail}`);
-
     // Find user by email
     const usersQuery = query(
       collection(db, 'users'),
-      where('email', '==', inviteeEmail.toLowerCase().trim())
+      where('email', '==', inviteeEmail)
     );
     
     const snapshot = await getDocs(usersQuery);
     
     if (snapshot.empty) {
-      console.log('❌ No user found with this email');
-      throw new Error('No user found with this email. They need to create an account first.');
+      throw new Error('User not found with this email');
     }
     
     const inviteeId = snapshot.docs[0].id;
-    const inviteeData = snapshot.docs[0].data();
-    
-    console.log(`✅ Found user: ${inviteeData.name || inviteeEmail} (${inviteeId})`);
     
     if (inviteeId === userId) {
       throw new Error('Cannot add yourself as a family member');
     }
-
-    // Check if already family members
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
-    
-    if (!userSnap.exists()) {
-      console.error('❌ Current user document not found');
-      throw new Error('Your user profile was not found. Please try logging out and back in.');
-    }
-
-    const currentFamily = userSnap.data().family || [];
-    if (currentFamily.includes(inviteeId)) {
-      throw new Error('This person is already in your family');
-    }
-    
-    console.log(`📝 Adding ${inviteeEmail} to family...`);
     
     // Add invitee to user's family
+    const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
       family: arrayUnion(inviteeId),
     });
-    
-    console.log(`✅ Updated your family list`);
     
     // Add user to invitee's family (bidirectional)
     const inviteeRef = doc(db, 'users', inviteeId);
@@ -77,22 +46,13 @@ export const inviteFamilyMember = async (userId, inviteeEmail) => {
       family: arrayUnion(userId),
     });
     
-    console.log(`✅ Updated ${inviteeEmail}'s family list`);
-    console.log(`🎉 Successfully added ${inviteeEmail} as family member`);
-    
     return {
       success: true,
       inviteeId,
-      inviteeName: inviteeData.name || inviteeEmail,
+      inviteeName: snapshot.docs[0].data().name,
     };
   } catch (error) {
-    console.error('❌ Error inviting family member:', error);
-    
-    // Provide more helpful error messages
-    if (error.code === 'permission-denied') {
-      throw new Error('Permission denied. Please make sure Firestore rules are deployed correctly.');
-    }
-    
+    console.error('Error inviting family member:', error);
     throw error;
   }
 };
@@ -221,57 +181,6 @@ export const getCaregiverPatients = async (caregiverId) => {
     return patients.filter(patient => patient !== null);
   } catch (error) {
     console.error('Error getting caregiver patients:', error);
-    throw error;
-  }
-};
-
-/**
- * Fix broken family relationships (make them bidirectional)
- * Call this if family members are not showing up correctly
- */
-export const fixFamilyRelationships = async (userId) => {
-  try {
-    console.log('🔧 Fixing family relationships...');
-    
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
-    
-    if (!userSnap.exists()) {
-      throw new Error('User not found');
-    }
-    
-    const familyIds = userSnap.data().family || [];
-    
-    if (familyIds.length === 0) {
-      console.log('No family members to fix');
-      return { fixed: 0 };
-    }
-    
-    let fixed = 0;
-    
-    // For each family member, ensure they have you in their family too
-    for (const familyMemberId of familyIds) {
-      const memberRef = doc(db, 'users', familyMemberId);
-      const memberSnap = await getDoc(memberRef);
-      
-      if (memberSnap.exists()) {
-        const memberFamily = memberSnap.data().family || [];
-        
-        // If they don't have you in their family, add you
-        if (!memberFamily.includes(userId)) {
-          await updateDoc(memberRef, {
-            family: arrayUnion(userId),
-          });
-          console.log(`✅ Fixed relationship with ${memberSnap.data().email}`);
-          fixed++;
-        }
-      }
-    }
-    
-    console.log(`🎉 Fixed ${fixed} family relationships`);
-    return { fixed };
-  } catch (error) {
-    console.error('Error fixing family relationships:', error);
     throw error;
   }
 };

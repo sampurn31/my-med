@@ -4,14 +4,13 @@
  * Perfect for users without Firebase billing
  */
 
-import { collection, query, where, getDocs, getDoc, addDoc, updateDoc, doc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { format, isToday, isBefore, isAfter, addMinutes, parseISO } from 'date-fns';
 
 // Store for tracking sent notifications (prevents duplicates)
 const sentNotifications = new Set();
 let notificationInterval = null;
-let cacheCleanupInterval = null;
 
 /**
  * Start the client-side notification scheduler
@@ -22,10 +21,10 @@ export const startNotificationScheduler = (userId) => {
     return;
   }
 
-  // Clear any existing intervals
+  // Clear any existing interval
   stopNotificationScheduler();
 
-  console.log('🔔 Starting client-side notification scheduler for user:', userId);
+  console.log('Starting client-side notification scheduler for user:', userId);
 
   // Check immediately
   checkAndSendNotifications(userId);
@@ -36,27 +35,21 @@ export const startNotificationScheduler = (userId) => {
   }, 60000); // 60 seconds
 
   // Clean up sent notifications cache every hour
-  cacheCleanupInterval = setInterval(() => {
+  setInterval(() => {
     sentNotifications.clear();
-    console.log('🧹 Cleared notification cache');
+    console.log('Cleared notification cache');
   }, 3600000); // 1 hour
 };
 
 /**
- * Stop the notification scheduler and cleanup
+ * Stop the notification scheduler
  */
 export const stopNotificationScheduler = () => {
   if (notificationInterval) {
     clearInterval(notificationInterval);
     notificationInterval = null;
-    console.log('🛑 Stopped notification scheduler');
+    console.log('Stopped notification scheduler');
   }
-  if (cacheCleanupInterval) {
-    clearInterval(cacheCleanupInterval);
-    cacheCleanupInterval = null;
-  }
-  // Clear the cache when stopping
-  sentNotifications.clear();
 };
 
 /**
@@ -177,35 +170,25 @@ const processScheduledTime = async (userId, scheduleId, schedule, timeStr, now) 
     }
 
     if (shouldSendNotification) {
-      // Get medication details using doc reference
-      try {
-        const medDocRef = doc(db, 'medications', schedule.medId);
-        const medDocSnap = await getDoc(medDocRef);
-        
-        const medName = medDocSnap.exists() ? medDocSnap.data().name : 'Your medication';
+      // Get medication details
+      const medDoc = await getDocs(query(
+        collection(db, 'medications'),
+        where('__name__', '==', schedule.medId)
+      ));
 
-        // Send notification
-        await sendBrowserNotification(
-          medName,
-          schedule.instructions || 'Time to take your medicine',
-          scheduleId,
-          doseLogId
-        );
+      const medName = medDoc.docs[0]?.data()?.name || 'Your medication';
 
-        // Mark as sent
-        sentNotifications.add(notificationKey);
-        console.log(`✅ Sent notification for ${medName} at ${timeStr}`);
-      } catch (error) {
-        console.error('Error getting medication details:', error);
-        // Still send notification with generic message
-        await sendBrowserNotification(
-          'Your medication',
-          schedule.instructions || 'Time to take your medicine',
-          scheduleId,
-          doseLogId
-        );
-        sentNotifications.add(notificationKey);
-      }
+      // Send notification
+      await sendBrowserNotification(
+        medName,
+        schedule.instructions || 'Time to take your medicine',
+        scheduleId,
+        doseLogId
+      );
+
+      // Mark as sent
+      sentNotifications.add(notificationKey);
+      console.log(`Sent notification for ${medName} at ${timeStr}`);
     }
   } catch (error) {
     console.error('Error processing scheduled time:', error);
@@ -228,7 +211,7 @@ const sendBrowserNotification = async (medName, instructions, scheduleId, doseLo
       return;
     }
 
-    // Send notification
+    // Send notification (remove actions - they only work with service worker)
     const notification = new Notification('Time to take your medicine! 💊', {
       body: `${medName}\n${instructions}`,
       icon: '/pwa-192x192.png',
@@ -240,10 +223,6 @@ const sendBrowserNotification = async (medName, instructions, scheduleId, doseLo
         doseLogId,
         url: '/dashboard',
       },
-      actions: [
-        { action: 'taken', title: 'Mark as Taken' },
-        { action: 'snooze', title: 'Snooze 10min' },
-      ],
     });
 
     // Handle notification click

@@ -16,52 +16,49 @@ import { db } from '../config/firebase';
 
 /**
  * Create dose logs for today's schedule times
- * Creates logs for all scheduled times today, regardless of whether they've passed
- * This allows tracking of missed doses
  */
 const createTodayDoseLogs = async (userId, scheduleId, medId, times) => {
   try {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayStart = new Date(today);
+    todayStart.setHours(0, 0, 0, 0);
 
     for (const timeStr of times) {
       // Parse time (format: "HH:mm")
       const [hours, minutes] = timeStr.split(':').map(Number);
       
-      // Validate time format
-      if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-        console.error(`Invalid time format: ${timeStr}`);
-        continue;
-      }
-      
       // Create scheduled datetime for today
-      const scheduledTime = new Date(today);
+      const scheduledTime = new Date();
       scheduledTime.setHours(hours, minutes, 0, 0);
 
-      // Check if dose log already exists
-      const existingLogsQuery = query(
-        collection(db, 'doseLogs'),
-        where('userId', '==', userId),
-        where('scheduleId', '==', scheduleId),
-        where('scheduledAt', '==', Timestamp.fromDate(scheduledTime))
-      );
+      // Only create if the time hasn't passed yet (compare with current time, not start of day)
+      const now = new Date();
+      if (scheduledTime >= todayStart) {
+        // Check if dose log already exists
+        const existingLogsQuery = query(
+          collection(db, 'doseLogs'),
+          where('userId', '==', userId),
+          where('scheduleId', '==', scheduleId),
+          where('scheduledAt', '==', Timestamp.fromDate(scheduledTime))
+        );
 
-      const existingLogs = await getDocs(existingLogsQuery);
+        const existingLogs = await getDocs(existingLogsQuery);
 
-      if (existingLogs.empty) {
-        // Create new dose log
-        await addDoc(collection(db, 'doseLogs'), {
-          userId,
-          scheduleId,
-          medId,
-          scheduledAt: Timestamp.fromDate(scheduledTime),
-          takenAt: null,
-          status: 'scheduled',
-          snoozedUntil: null,
-        });
-        console.log(`✅ Created dose log for ${timeStr} (scheduleId: ${scheduleId})`);
-      } else {
-        console.log(`⏭️ Dose log already exists for ${timeStr} (scheduleId: ${scheduleId})`);
+        if (existingLogs.empty) {
+          // Create new dose log
+          await addDoc(collection(db, 'doseLogs'), {
+            userId,
+            scheduleId,
+            medId,
+            scheduledAt: Timestamp.fromDate(scheduledTime),
+            takenAt: null,
+            status: 'scheduled',
+            snoozedUntil: null,
+          });
+          console.log(`✅ Created dose log for ${timeStr} (scheduleId: ${scheduleId})`);
+        } else {
+          console.log(`⏭️ Skipped duplicate dose log for ${timeStr} (scheduleId: ${scheduleId})`);
+        }
       }
     }
   } catch (error) {
@@ -71,76 +68,24 @@ const createTodayDoseLogs = async (userId, scheduleId, medId, times) => {
 };
 
 /**
- * Add a new schedule with validation
+ * Add a new schedule
  */
 export const addSchedule = async (userId, scheduleData) => {
   try {
-    // Validation
-    if (!scheduleData.medId) {
-      throw new Error('Medication ID is required');
-    }
-    if (!scheduleData.startDate) {
-      throw new Error('Start date is required');
-    }
-    if (!scheduleData.times || scheduleData.times.length === 0) {
-      throw new Error('At least one time is required');
-    }
-
-    const startDate = new Date(scheduleData.startDate);
-    const endDate = scheduleData.endDate ? new Date(scheduleData.endDate) : null;
-
-    // Validate date range
-    if (endDate && endDate < startDate) {
-      throw new Error('End date must be after start date');
-    }
-
-    // Validate times format
-    for (const timeStr of scheduleData.times) {
-      const [hours, minutes] = timeStr.split(':').map(Number);
-      if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-        throw new Error(`Invalid time format: ${timeStr}. Use HH:mm format.`);
-      }
-    }
-
     const scheduleRef = await addDoc(collection(db, 'schedules'), {
       userId,
       medId: scheduleData.medId,
-      startDate: Timestamp.fromDate(startDate),
-      endDate: endDate ? Timestamp.fromDate(endDate) : null,
+      startDate: Timestamp.fromDate(new Date(scheduleData.startDate)),
+      endDate: scheduleData.endDate ? Timestamp.fromDate(new Date(scheduleData.endDate)) : null,
       recurrence: scheduleData.recurrence || { type: 'daily', intervalHours: null },
-      times: scheduleData.times,
+      times: scheduleData.times || [], // Array of "HH:mm" strings
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata',
       instructions: scheduleData.instructions || '',
       active: true,
     });
 
-    console.log(`✅ Created schedule ${scheduleRef.id}`);
-
-    // Create dose logs for today if schedule is active today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    // Normalize startDate to midnight for comparison
-    const startDateNormalized = new Date(startDate);
-    startDateNormalized.setHours(0, 0, 0, 0);
-    
-    // Normalize endDate to midnight for comparison (if exists)
-    const endDateNormalized = endDate ? new Date(endDate) : null;
-    if (endDateNormalized) {
-      endDateNormalized.setHours(0, 0, 0, 0);
-    }
-    
-    // Check if today is within the schedule range
-    const isActiveToday = startDateNormalized <= today && (!endDateNormalized || endDateNormalized >= today);
-    
-    console.log(`Schedule date check: start=${startDateNormalized.toDateString()}, today=${today.toDateString()}, end=${endDateNormalized?.toDateString() || 'none'}, isActive=${isActiveToday}`);
-    
-    if (isActiveToday) {
-      console.log(`Creating dose logs for today...`);
-      await createTodayDoseLogs(userId, scheduleRef.id, scheduleData.medId, scheduleData.times);
-    } else {
-      console.log(`Schedule not active today, skipping dose log creation`);
-    }
+    // Create dose logs for today
+    await createTodayDoseLogs(userId, scheduleRef.id, scheduleData.medId, scheduleData.times || []);
 
     return scheduleRef.id;
   } catch (error) {
@@ -174,27 +119,12 @@ export const updateSchedule = async (scheduleId, updates) => {
 };
 
 /**
- * Delete a schedule and all associated dose logs
+ * Delete a schedule
  */
 export const deleteSchedule = async (scheduleId) => {
   try {
-    console.log(`Deleting schedule ${scheduleId} and associated dose logs...`);
-    
-    // Delete associated dose logs
-    const doseLogsQuery = query(
-      collection(db, 'doseLogs'),
-      where('scheduleId', '==', scheduleId)
-    );
-    const doseLogsSnap = await getDocs(doseLogsQuery);
-    const deletePromises = doseLogsSnap.docs.map((doc) => deleteDoc(doc.ref));
-    await Promise.all(deletePromises);
-    console.log(`Deleted ${doseLogsSnap.size} dose logs`);
-
-    // Delete schedule
     const scheduleRef = doc(db, 'schedules', scheduleId);
     await deleteDoc(scheduleRef);
-    console.log(`✅ Successfully deleted schedule ${scheduleId}`);
-    
     return true;
   } catch (error) {
     console.error('Error deleting schedule:', error);

@@ -90,7 +90,7 @@ export const updateMedication = async (medId, updates, photoFile = null) => {
 };
 
 /**
- * Delete a medication and all associated data
+ * Delete a medication
  * Note: Photo deletion disabled (Firebase Storage not enabled)
  */
 export const deleteMedication = async (medId) => {
@@ -102,7 +102,16 @@ export const deleteMedication = async (medId) => {
       throw new Error('Medication not found');
     }
 
-    console.log(`Deleting medication ${medId} and all associated data...`);
+    // Photo deletion disabled - Firebase Storage not enabled
+    // const photoUrl = medSnap.data().photoUrl;
+    // if (photoUrl) {
+    //   try {
+    //     const photoRef = ref(storage, photoUrl);
+    //     await deleteObject(photoRef);
+    //   } catch (err) {
+    //     console.warn('Could not delete photo:', err);
+    //   }
+    // }
 
     // Delete associated schedules
     const schedulesQuery = query(
@@ -110,23 +119,11 @@ export const deleteMedication = async (medId) => {
       where('medId', '==', medId)
     );
     const schedulesSnap = await getDocs(schedulesQuery);
-    const scheduleDeletePromises = schedulesSnap.docs.map((doc) => deleteDoc(doc.ref));
-    await Promise.all(scheduleDeletePromises);
-    console.log(`Deleted ${schedulesSnap.size} schedules`);
-
-    // Delete associated dose logs
-    const doseLogsQuery = query(
-      collection(db, 'doseLogs'),
-      where('medId', '==', medId)
-    );
-    const doseLogsSnap = await getDocs(doseLogsQuery);
-    const doseLogDeletePromises = doseLogsSnap.docs.map((doc) => deleteDoc(doc.ref));
-    await Promise.all(doseLogDeletePromises);
-    console.log(`Deleted ${doseLogsSnap.size} dose logs`);
+    const deletePromises = schedulesSnap.docs.map((doc) => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
 
     // Delete medication
     await deleteDoc(medRef);
-    console.log(`✅ Successfully deleted medication ${medId}`);
 
     return true;
   } catch (error) {

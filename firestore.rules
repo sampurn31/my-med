@@ -20,20 +20,15 @@ service cloud.firestore {
     
     // Users collection
     match /users/{userId} {
-      // Users can read their own document OR any user document (for family invites)
-      // This allows searching for users by email to invite them
-      allow read: if isAuthenticated();
+      // Users can read their own document
+      allow read: if isOwner(userId);
       
       // Users can create their own document on signup
       allow create: if isOwner(userId) && 
                       request.resource.data.keys().hasAll(['name', 'email', 'createdAt', 'timezone', 'family', 'fcmTokens']);
       
-      // Users can update their own document (full access)
-      // OR update ONLY the family field of other users (for bidirectional family invites)
-      allow update: if isOwner(userId) || 
-                      (isAuthenticated() && 
-                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['family']) &&
-                       request.resource.data.family.hasAll(resource.data.family));
+      // Users can update their own document
+      allow update: if isOwner(userId);
       
       // Users can delete their own document
       allow delete: if isOwner(userId);

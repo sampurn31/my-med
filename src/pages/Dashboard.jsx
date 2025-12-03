@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getTodayDoseLogs, markDoseAsTaken, snoozeDose, skipDose } from '../services/doseLogs';
 import { getUserMedications } from '../services/medications';
-import { getUserSchedules, syncTodayDoseLogs } from '../services/schedules';
+import { getUserSchedules } from '../services/schedules';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
-import { Clock, Check, SkipForward, Bell, BellOff, Pill, Calendar, Users, Trash2 } from 'lucide-react';
+import { Clock, Check, SkipForward, Bell, Pill, Calendar, Users, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cleanupDuplicateDoseLogs } from '../utils/cleanupDuplicates';
-import { requestNotificationPermission, areNotificationsEnabled } from '../services/clientNotifications';
 
 export default function Dashboard() {
   const { currentUser } = useAuth();
@@ -17,12 +16,9 @@ export default function Dashboard() {
   const [schedules, setSchedules] = useState({});
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
-    // Check notification status
-    setNotificationsEnabled(areNotificationsEnabled());
   }, [currentUser]);
 
   const loadDashboardData = async () => {
@@ -31,14 +27,11 @@ export default function Dashboard() {
     try {
       setLoading(true);
 
-      // Sync dose logs for today's schedules
-      // This ensures any newly created schedules have their dose logs
-      console.log('🔄 Syncing dose logs for dashboard...');
-      await syncTodayDoseLogs(currentUser.uid);
+      // Note: syncTodayDoseLogs is called in App.jsx on login, so we don't need to call it here
+      // This prevents duplicate dose log creation
 
       // Load today's dose logs
       const logs = await getTodayDoseLogs(currentUser.uid);
-      console.log(`📊 Loaded ${logs.length} dose logs for today`);
 
       // Load medications
       const meds = await getUserMedications(currentUser.uid);
@@ -118,47 +111,19 @@ export default function Dashboard() {
     }
   };
 
-  const handleEnableNotifications = async () => {
-    try {
-      const granted = await requestNotificationPermission();
-      if (granted) {
-        setNotificationsEnabled(true);
-        toast.success('Notifications enabled! 🔔');
-        // Reload page to start notification scheduler
-        window.location.reload();
-      } else {
-        toast.error('Please allow notifications in your browser settings');
-      }
-    } catch (error) {
-      console.error('Error enabling notifications:', error);
-      toast.error('Failed to enable notifications');
-    }
-  };
-
   const getStatusBadge = (status) => {
     const badges = {
       scheduled: 'bg-blue-100 text-blue-800',
       taken: 'bg-green-100 text-green-800',
       missed: 'bg-red-100 text-red-800',
       skipped: 'bg-gray-100 text-gray-800',
-      snoozed: 'bg-yellow-100 text-yellow-800',
     };
     return badges[status] || badges.scheduled;
   };
 
-  const isSnoozed = (log) => {
-    if (!log.snoozedUntil) return false;
-    return log.snoozedUntil.toDate() > new Date();
-  };
-
-  const getSnoozedUntilTime = (log) => {
-    if (!log.snoozedUntil) return null;
-    return format(log.snoozedUntil.toDate(), 'h:mm a');
-  };
-
-  // Show ALL scheduled doses, including snoozed ones
   const upcomingDoses = doseLogs.filter(log => 
-    log.status === 'scheduled'
+    log.status === 'scheduled' && 
+    (!log.snoozedUntil || log.snoozedUntil.toDate() <= new Date())
   );
 
   const completedDoses = doseLogs.filter(log => 
@@ -187,32 +152,15 @@ export default function Dashboard() {
               <h1 className="text-xl md:text-2xl font-bold text-gray-900">My Meds</h1>
             </div>
             <div className="flex items-center gap-2 md:gap-4">
-              {/* Notification Status Indicator */}
-              {!notificationsEnabled && (
-                <button
-                  onClick={handleEnableNotifications}
-                  className="btn-primary flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:px-4 md:py-2"
-                  title="Enable notifications to get reminders"
-                >
-                  <BellOff className="w-4 h-4" />
-                  <span className="hidden md:inline">Enable Alerts</span>
-                </button>
-              )}
-              {notificationsEnabled && (
-                <div className="flex items-center gap-1 px-2 md:px-3 py-1 md:py-2 bg-green-100 text-green-800 rounded-lg text-xs md:text-sm">
-                  <Bell className="w-4 h-4" />
-                  <span className="hidden md:inline">Alerts On</span>
-                </div>
-              )}
               <button
                 onClick={handleCleanupDuplicates}
-                className="btn-secondary flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:px-4 md:py-2 hidden md:flex"
+                className="btn-secondary flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:px-4 md:py-2"
                 title="Remove duplicate dose logs"
               >
                 <Trash2 className="w-4 h-4" />
                 <span className="hidden md:inline">Cleanup</span>
               </button>
-              <div className="text-right hidden lg:block">
+              <div className="text-right hidden sm:block">
                 <p className="text-xs md:text-sm text-gray-500">Welcome back,</p>
                 <p className="text-xs md:text-sm font-medium text-gray-900 truncate max-w-[120px] md:max-w-none">
                   {currentUser?.displayName || currentUser?.email?.split('@')[0]}
@@ -295,15 +243,12 @@ export default function Dashboard() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm md:text-base text-gray-600 mb-2 flex-wrap">
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
-                            <span className="font-medium">{format(log.scheduledAt.toDate(), 'h:mm a')}</span>
-                          </div>
-                          {isSnoozed(log) && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                              <Bell className="w-3 h-3" />
-                              Snoozed until {getSnoozedUntilTime(log)}
+                        <div className="flex items-center gap-2 text-sm md:text-base text-gray-600 mb-2">
+                          <Clock className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+                          <span className="font-medium">{format(log.scheduledAt.toDate(), 'h:mm a')}</span>
+                          {log.snoozedUntil && (
+                            <span className="text-orange-600 text-xs md:text-sm">
+                              (Snoozed until {format(log.snoozedUntil.toDate(), 'h:mm a')})
                             </span>
                           )}
                         </div>
