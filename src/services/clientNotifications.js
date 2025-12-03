@@ -29,10 +29,10 @@ export const startNotificationScheduler = (userId) => {
   // Check immediately
   checkAndSendNotifications(userId);
 
-  // Then check every minute
+  // Then check every minute (sends notification every minute from 5 min before until scheduled time)
   notificationInterval = setInterval(() => {
     checkAndSendNotifications(userId);
-  }, 60000); // 60 seconds
+  }, 60000); // 60 seconds (1 minute)
 
   // Clean up sent notifications cache every hour
   setInterval(() => {
@@ -105,21 +105,19 @@ const processScheduledTime = async (userId, scheduleId, schedule, timeStr, now) 
     const scheduledTime = new Date();
     scheduledTime.setHours(hours, minutes, 0, 0);
 
-    // Check if this time is within the notification window (5 minutes before to 5 minutes after)
+    // Check if this time is within the notification window (5 minutes before to scheduled time)
     const notificationStart = addMinutes(scheduledTime, -5);
-    const notificationEnd = addMinutes(scheduledTime, 5);
+    const notificationEnd = scheduledTime; // Only until scheduled time, not after
 
     if (isBefore(now, notificationStart) || isAfter(now, notificationEnd)) {
-      return; // Not time yet or too late
+      return; // Not time yet or already past scheduled time
     }
 
-    // Create unique key for this notification
+    // Create unique key for this notification (per minute to allow repeated notifications)
     const notificationKey = `${scheduleId}-${format(scheduledTime, 'yyyy-MM-dd-HH:mm')}`;
-
-    // Check if we already sent this notification
-    if (sentNotifications.has(notificationKey)) {
-      return; // Already sent
-    }
+    
+    // Note: We will send notifications every minute, so we don't check sentNotifications here
+    // The notification will stop when user marks as taken/skipped
 
     // Check if dose log already exists
     const doseLogsQuery = query(
@@ -152,9 +150,10 @@ const processScheduledTime = async (userId, scheduleId, schedule, timeStr, now) 
       const doseLog = doseLogsSnapshot.docs[0].data();
       doseLogId = doseLogsSnapshot.docs[0].id;
 
-      // Don't send if already taken or skipped
+      // Don't send if already taken or skipped - STOP notifications immediately
       if (doseLog.status === 'taken' || doseLog.status === 'skipped') {
         sentNotifications.add(notificationKey);
+        console.log(`⏹️ Dose already ${doseLog.status}, stopping notifications`);
         return;
       }
 
@@ -162,10 +161,12 @@ const processScheduledTime = async (userId, scheduleId, schedule, timeStr, now) 
       if (doseLog.snoozedUntil) {
         const snoozedUntil = doseLog.snoozedUntil.toDate();
         if (isAfter(snoozedUntil, now)) {
+          console.log('⏸️ Dose snoozed, skipping notification');
           return; // Still snoozed
         }
       }
 
+      // Send notification every minute until taken
       shouldSendNotification = true;
     }
 
